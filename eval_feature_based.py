@@ -1,13 +1,3 @@
-########################################################################
-#
-# @author : Emmanouil Sylligardos
-# @when : Winter Semester 2022/2023
-# @where : LIPADE internship Paris
-# @title : MSAD (Model Selection Anomaly Detection)
-# @component: root
-# @file : eval_feature_based
-#
-########################################################################
 
 import argparse
 import re
@@ -35,7 +25,7 @@ def eval_feature_based(data_path, model_name, model_path, path_save=None, fnames
 	all_preds = []
 	inf_time = []
 
-	# Load model 
+	# Load model
 	model = load_classifier(model_path)
 
 	# Read data (single csv file or directory with csvs)
@@ -65,7 +55,7 @@ def eval_feature_based(data_path, model_name, model_path, path_save=None, fnames
 		inf_time.append(toc-tic)
 	results = pd.DataFrame(data=zip(all_preds, inf_time), columns=["class", "inf"], index=fnames)
 	results.columns = [f"{classifier_name}_{x}" for x in results.columns.values]
-	
+
 	# Print results
 	print(results)
 
@@ -81,7 +71,7 @@ if __name__ == "__main__":
 		description='Evaluate feature based models \
 			on a single or multiple time series and save the results'
 	)
-	
+
 	parser.add_argument('-d', '--data', type=str, help='path to the time series to predict', required=True)
 	parser.add_argument('-m', '--model', type=str, help='model to run', required=True)
 	parser.add_argument('-mp', '--model_path', type=str, help='path to the trained model', required=True)
@@ -89,7 +79,7 @@ if __name__ == "__main__":
 
 	args = parser.parse_args()
 	eval_feature_based(
-		data_path=args.data, 
+		data_path=args.data,
 		model_name=args.model,
 		model_path=args.model_path,
 		path_save=args.path_save,

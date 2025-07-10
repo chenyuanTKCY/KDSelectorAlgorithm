@@ -1,13 +1,4 @@
-########################################################################
-#
-# @author : Emmanouil Sylligardos
-# @when : Winter Semester 2022/2023
-# @where : LIPADE internship Paris
-# @title : MSAD (Model Selection Anomaly Detection)
-# @component: root
-# @file : train_feature_based
-#
-########################################################################
+
 
 
 import argparse
@@ -63,7 +54,7 @@ def train_feature_based(data_path, classifier_name, split_per=0.7, seed=None, re
 	training_stats = {}
 	original_dataset = data_path.split('/')[:-1]
 	original_dataset = '/'.join(original_dataset)
-	
+
 	# Load the splits
 	train_set, val_set, test_set = create_splits(
 		original_dataset,
@@ -83,12 +74,12 @@ def train_feature_based(data_path, classifier_name, split_per=0.7, seed=None, re
 	new_index = [tuple(x.rsplit('.', 1)) for x in data_index]
 	new_index = pd.MultiIndex.from_tuples(new_index, names=["name", "n_window"])
 	data.index = new_index
-	
+
 	# Create subsets
 	training_data = data.loc[data.index.get_level_values("name").isin(train_indexes)]
 	val_data = data.loc[data.index.get_level_values("name").isin(val_indexes)]
 	test_data = data.loc[data.index.get_level_values("name").isin(test_indexes)]
-	
+
 	# Split data from labels
 	y_train, X_train = training_data['label'], training_data.drop('label', 1)
 	y_val, X_val = val_data['label'], val_data.drop('label', 1)
@@ -113,7 +104,7 @@ def train_feature_based(data_path, classifier_name, split_per=0.7, seed=None, re
 	# Print training time
 	training_stats["training_time"] = toc - tic
 	print(f"training time: {training_stats['training_time']:.3f} secs")
-	
+
 	# Print valid accuracy and inference time
 	tic = perf_counter()
 	classifier_score = classifier.score(X_val, y_val)
@@ -137,7 +128,7 @@ def train_feature_based(data_path, classifier_name, split_per=0.7, seed=None, re
 	if eval_model:
 		eval_set = test_indexes if len(test_indexes) > 0 else val_indexes
 		eval_feature_based(
-			data_path=data_path, 
+			data_path=data_path,
 			model_name=classifier_name,
 			model_path=saved_model_path,
 			path_save=path_save_results,
@@ -170,7 +161,7 @@ if __name__ == "__main__":
 		train_feature_based(
 			data_path=args.path,
 			classifier_name=classifier,
-			split_per=args.split_per, 
+			split_per=args.split_per,
 			seed=args.seed,
 			read_from_file=args.file,
 			eval_model=args.eval_true,

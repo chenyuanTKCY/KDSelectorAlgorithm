@@ -1,13 +1,4 @@
-########################################################################
-#
-# @author : Emmanouil Sylligardos
-# @when : Winter Semester 2022/2023
-# @where : LIPADE internship Paris
-# @title : MSAD (Model Selection Anomaly Detection)
-# @component: root
-# @file : merge_scores
-#
-########################################################################
+
 
 from utils.metrics_loader import MetricsLoader
 from utils.config import TSB_metrics_path, TSB_data_path, detector_names, TSB_acc_tables_path
@@ -22,7 +13,7 @@ from natsort import natsorted
 def merge_scores(path, metric, save_path):
 	# Load MetricsLoader object
 	metricsloader = MetricsLoader(TSB_metrics_path)
-	
+
 	# Check if given metric exists
 	if metric.upper() not in metricsloader.get_names():
 		raise ValueError(f"Not recognizable metric {metric}. Please use one of {metricsloader.get_names()}")
@@ -36,7 +27,7 @@ def merge_scores(path, metric, save_path):
 
 	# Read detectors and oracles scores
 	metric_scores = metricsloader.read(metric.upper())
-	
+
 	# Read classifiers predictions, and add scores
 	df = None
 	scores_files = [x for x in os.listdir(path) if '.csv' in x]
@@ -44,11 +35,11 @@ def merge_scores(path, metric, save_path):
 		file_path = os.path.join(path, file)
 		current_classifier = pd.read_csv(file_path, index_col=0)
 		col_name = [x for x in current_classifier.columns if "class" in x][0]
-		
+
 		values = np.diag(metric_scores.loc[current_classifier.index, current_classifier.iloc[:, 0]])
 		curr_df = pd.DataFrame(values, index=current_classifier.index, columns=[col_name.replace("_class", "")])
 		curr_df = pd.merge(current_classifier[col_name], curr_df, left_index=True, right_index=True)
-		
+
 		if df is None:
 			df = curr_df
 		else:
@@ -58,12 +49,12 @@ def merge_scores(path, metric, save_path):
 	# Add Oracle (TRUE_ORACLE-100) and Averaging Ensemble
 	df = pd.merge(df, metric_scores[["TRUE_ORACLE-100", "AVG_ENS"] + detector_names], left_index=True, right_index=True)
 	df.rename(columns={'TRUE_ORACLE-100': 'Oracle', 'AVG_ENS': 'Avg Ens'}, inplace=True)
-	
+
 	# Add true labels from AUC_PR metrics
 	auc_pr_detectors_scores = metricsloader.read('AUC_PR')[detector_names]
 	labels = auc_pr_detectors_scores.idxmax(axis=1).to_frame(name='label')
 	df = pd.merge(labels, df, left_index=True, right_index=True)
-	
+
 	# Change the indexes to dataset, filename
 	old_indexes = df.index.tolist()
 	old_indexes_split = [tuple(x.split('/')) for x in old_indexes]
@@ -116,7 +107,7 @@ def merge_inference_times(path, save_path):
 
 		sum_df = pd.merge(df, sum, left_index=True, right_index=True)
 		sum_df.rename(columns={f"{selector_name}_inf": f"{selector_name}_pred"}, inplace=True)
-		
+
 		if final_df is None:
 			final_df = sum_df
 		else:
@@ -125,7 +116,7 @@ def merge_inference_times(path, save_path):
 
 	# Merge with detectors inference times
 	final_df = pd.merge(detectors_inf, final_df, left_index=True, right_index=True)
-	
+
 	# Save the file with name model_selectors_inference_time.csv in the results/execution_time dir
 	final_df.to_csv(os.path.join(save_path, f'current_inference_time.csv'), index=True)
 	print(final_df)
@@ -144,17 +135,17 @@ if __name__ == "__main__":
 
 
 	args = parser.parse_args()
-	
-	
+
+
 	if not args.time_true:
 		merge_scores(
-			path=args.path, 
+			path=args.path,
 			metric=args.metric,
 			save_path=args.save_path,
 		)
 	else:
 		merge_inference_times(
-			path=args.path, 
+			path=args.path,
 			save_path=args.save_path,
 		)
 

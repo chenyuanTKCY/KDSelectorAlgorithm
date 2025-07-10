@@ -1,13 +1,3 @@
-########################################################################
-#
-# @author : Emmanouil Sylligardos
-# @when : Winter Semester 2022/2023
-# @where : LIPADE internship Paris
-# @title : MSAD (Model Selection Anomaly Detection)
-# @component: root
-# @file : run_oracle
-#
-########################################################################
 
 import argparse
 import os
@@ -61,7 +51,7 @@ def eval_oracle(path):
 
 	# all_oracles = all_oracles.reindex(natsorted(all_oracles.columns, key=lambda y: y.lower()), axis=1)
 	order = list(all_oracles.median().sort_values().index)
-	
+
 	# Create boxplot
 	plt.figure(figsize=(19, 12))
 	sns.boxplot(order=order,
@@ -81,7 +71,7 @@ if __name__ == "__main__":
 	parser.add_argument('-p', '--path', type=str, required=True,
 		help='Path to metrics'
 	)
-	parser.add_argument('-a', '--acc', type=str, default="1.0", 
+	parser.add_argument('-a', '--acc', type=str, default="1.0",
 		help='The accuracy that you want to simulate'
 	)
 	parser.add_argument('-r', '--randomness', type=str, default='true',
@@ -92,17 +82,17 @@ if __name__ == "__main__":
 	# Run single
 	if args.acc != 'all':
 		create_oracle(
-			path=args.path, 
-			acc=float(args.acc), 
+			path=args.path,
+			acc=float(args.acc),
 			randomness=args.randomness
 		)
 	elif args.acc == 'all':
 		acc_all = [1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4, 0.35, 0.3, 0.25, 0.2, 0.15, 0.1, 0.05, 0.00]
-		
+
 		for acc in tqdm(acc_all, desc='Oracle'):
 			create_oracle(
-			path=args.path, 
-			acc=acc, 
+			path=args.path,
+			acc=acc,
 			randomness=args.randomness
 		)
 

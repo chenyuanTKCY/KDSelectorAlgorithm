@@ -1,13 +1,4 @@
-########################################################################
-#
-# @author : Emmanouil Sylligardos
-# @when : Winter Semester 2022/2023
-# @where : LIPADE internship Paris
-# @title : MSAD (Model Selection Anomaly Detection)
-# @component: root
-# @file : train_rocket
-#
-########################################################################
+
 
 import argparse
 import os
@@ -57,7 +48,7 @@ def run_rocket(data_path, split_per=0.7, seed=None, read_from_file=None, eval_mo
 	# Split data from labels
 	X_train, y_train = training_data.__getallsamples__().astype('float32'), training_data.__getalllabels__()
 	X_val, y_val = val_data.__getallsamples__().astype('float32'), val_data.__getalllabels__()
-	
+
 	# Create the feature extractor, the scaler, and the classifier
 	minirocket = MiniRocket(num_kernels=10000, n_jobs=-1)
 	scaler = StandardScaler(with_mean=False, copy=False)
@@ -66,7 +57,7 @@ def run_rocket(data_path, split_per=0.7, seed=None, read_from_file=None, eval_mo
 	tic = perf_counter()
 	X_train = minirocket.fit_transform(X_train).to_numpy()
 	print("minirocket fitted: {:.3f} secs".format(perf_counter()-tic))
-	
+
 	# Setup batching
 	batch_size = 32768
 	indexes = np.arange(X_train.shape[0])
@@ -126,7 +117,7 @@ def run_rocket(data_path, split_per=0.7, seed=None, read_from_file=None, eval_mo
 	if eval_model:
 		eval_set = test_set if len(test_set) > 0 else val_set
 		eval_rocket(
-			data_path=data_path, 
+			data_path=data_path,
 			model_path=saved_model_path,
 			path_save=path_save_results,
 			fnames=eval_set,

@@ -1,13 +1,4 @@
-########################################################################
-#
-# @author : Emmanouil Sylligardos
-# @when : Winter Semester 2022/2023
-# @where : LIPADE internship Paris
-# @title : MSAD (Model Selection Anomaly Detection)
-# @component: root
-# @file : create_windows_dataset
-#
-########################################################################
+
 
 
 import sys
@@ -33,7 +24,7 @@ def create_tmp_dataset(
 	data_path,
 	metric_path,
 	window_size,
-	metric, 
+	metric,
 ):
 	"""Generates a new dataset from the given dataset. The time series
 	in the generated dataset have been divided in windows.
@@ -66,13 +57,13 @@ def create_tmp_dataset(
 		print(">>> Window size: {} too big for some timeseries. Deleting {} timeseries"
 				.format(window_size, len(idx_to_delete_short)))
 		idx_to_delete.extend(idx_to_delete_short)
-		
+
 	if len(idx_to_delete) > 0:
 		for idx in sorted(idx_to_delete, reverse=True):
 			del x[idx]
 			del y[idx]
 			del fnames[idx]
-	metrics_data = metrics_data.loc[fnames] 
+	metrics_data = metrics_data.loc[fnames]
 	assert(
 		list(metrics_data.index) == fnames
 	)
@@ -107,7 +98,7 @@ def create_tmp_dataset(
 		data = np.concatenate((label[:, np.newaxis], ts), axis=1)
 		col_names = ['label']
 		col_names += ["val_{}".format(i) for i in range(window_size)]
-		
+
 		df = pd.DataFrame(data, index=new_names, columns=col_names)
 		df.to_csv(os.path.join(save_dir, name, dataset_name, ts_name + '.csv'))
 	'''
@@ -127,7 +118,7 @@ def create_tmp_dataset(
 
 
 def split_and_compute_labels(x, metrics_data, window_size):
-	'''Splits the timeseries, computes the labels and returns 
+	'''Splits the timeseries, computes the labels and returns
 	the segmented timeseries and the new labels.
 
 	:param x: list of the timeseries to be segmented (as np arrays)
@@ -152,7 +143,7 @@ def split_and_compute_labels(x, metrics_data, window_size):
 
 		# Split time series into windows
 		ts_split = split_ts(ts, window_size)
-		
+
 		# Save everything to lists
 		ts_list.append(ts_split)
 		# labels.append(np.ones(len(ts_split)) * detector_names.index(metric_label))
@@ -179,7 +170,7 @@ def split_and_compute_labels(x, metrics_data, window_size):
 	assert(
 		len(x) == len(ts_list) == len(labels)
 	), "Timeseries split and labels computation error, lengths do not match"
-			
+
 	return ts_list, labels, soft_labels
 
 
@@ -249,7 +240,7 @@ if __name__ == "__main__":
 		save_dir=args.save_dir,
 		data_path=args.path,
 		metric_path=args.metric_path,
-		window_size=args.window_size, 
+		window_size=args.window_size,
 		metric=args.metric,
 	)
 

@@ -1,13 +1,4 @@
-########################################################################
-#
-# @author : Emmanouil Sylligardos
-# @when : Winter Semester 2022/2023
-# @where : LIPADE internship Paris
-# @title : MSAD (Model Selection Anomaly Detection)
-# @component: root
-# @file : merge_unsupervised_scores
-#
-########################################################################
+
 
 from utils.metrics_loader import MetricsLoader
 from utils.config import TSB_metrics_path, TSB_data_path, detector_names, TSB_acc_tables_path
@@ -47,7 +38,7 @@ def merge_unsupervised_scores(path, metric, save_path):
 
 	# Load MetricsLoader object
 	metricsloader = MetricsLoader(TSB_metrics_path)
-	
+
 	# Check if given metric exists
 	if metric.upper() not in metricsloader.get_names():
 		raise ValueError(f"Not recognizable metric {metric}. Please use one of {metricsloader.get_names()}")
@@ -62,7 +53,7 @@ def merge_unsupervised_scores(path, metric, save_path):
 
 	# Read detectors and oracles scores
 	metric_scores = metricsloader.read(metric.upper())
-			
+
 	# Read all MS per split
 	for filename, og_res in zip(split_names, og_results):
 		files = read_csv_with_substring(path, f'{filename}_preds')
@@ -72,18 +63,18 @@ def merge_unsupervised_scores(path, metric, save_path):
 		for file in files:
 			current_classifier = pd.read_csv(file, index_col=0)
 			current_classifier = current_classifier.rename(columns=lambda x: x.replace(f'_{filename}', ''))
-			
+
 			col_name = [x for x in current_classifier.columns if "class" in x][0]
-		
+
 			values = np.diag(metric_scores.loc[current_classifier.index, current_classifier.iloc[:, 0]])
 			curr_df = pd.DataFrame(values, index=current_classifier.index, columns=[col_name.replace("_class", "_score")])
 			curr_df = pd.merge(curr_df, current_classifier, left_index=True, right_index=True)
-			
+
 			if df is None:
 				df = curr_df
 			else:
 				df = pd.merge(df, curr_df, left_index=True, right_index=True)
-		
+
 		# Add Oracles, labels and Anomaly detectors stats on splits
 		columns_to_keep = ['label', 'Oracle', 'Avg Ens', 'best_ad_train', 'average_ad_train', 'worst_ad_train', 'best_ad_test', 'average_ad_test', 'worst_ad_test']
 		df = pd.merge(og_res[columns_to_keep], df, left_index=True, right_index=True)
@@ -91,8 +82,8 @@ def merge_unsupervised_scores(path, metric, save_path):
 		# Save the final dataframe
 		df.to_csv(os.path.join(save_path, f'current_{filename}.csv'), index=True)
 		print(df)
-			
-	
+
+
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(
@@ -106,9 +97,9 @@ if __name__ == "__main__":
 
 
 	args = parser.parse_args()
-	
+
 	merge_unsupervised_scores(
-        path=args.path, 
+        path=args.path,
         metric=args.metric,
         save_path=args.save_path,
     )

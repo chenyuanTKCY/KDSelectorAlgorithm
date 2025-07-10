@@ -1,13 +1,4 @@
-########################################################################
-#
-# @author : Emmanouil Sylligardos
-# @when : Winter Semester 2022/2023
-# @where : LIPADE internship Paris
-# @title : MSAD (Model Selection Anomaly Detection)
-# @component: utils
-# @file : evaluator
-#
-########################################################################
+
 
 import os
 import pickle
@@ -44,7 +35,7 @@ class Evaluator:
 
 		:param model: the object model whose predictions we want
 		:param fnames: the names of the timeseries to be predicted
-		:param data_path: the path to the timeseries 
+		:param data_path: the path to the timeseries
 			(please check that path and fnames together make the complete path)
 		:param batch_size: the batch size used to make the predictions
 		:param deep_model:
@@ -56,7 +47,7 @@ class Evaluator:
 		inf_time = []
 
 		loop = tqdm(
-			fnames, 
+			fnames,
 			total=len(fnames),
 			desc="Computing",
 			unit="files",
@@ -84,11 +75,11 @@ class Evaluator:
 			counter = Counter(preds)
 			most_voted = counter.most_common(1)
 			toc = perf_counter()
-			
+
 			# Save info
 			all_preds.append(detector_names[most_voted[0][0]])
 			inf_time.append(toc-tic)
-		
+
 		fnames = [x[:-4] for x in fnames]
 
 		return pd.DataFrame(data=zip(all_preds, inf_time), columns=["class", "inf"], index=fnames)
@@ -126,7 +117,7 @@ class Evaluator:
 	def predict_timeseries_non_deep(self, model, X_val, y_val):
 		all_preds = []
 		all_acc = []
-		
+
 		# Make predictions
 		preds = model.predict(X_val)
 
@@ -176,14 +167,14 @@ def load_classifier(path):
 	filename = Path(path)
 	with open(f'{filename}', 'rb') as input:
 		output = pickle.load(input)
-	
+
 	return output
 
 '''
 	def predict_non_deep(self, model, X_val, y_val):
 		all_preds = []
 		all_acc = []
-		
+
 		# Make predictions
 		preds = model.predict(X_val)
 

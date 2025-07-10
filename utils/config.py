@@ -1,13 +1,4 @@
-########################################################################
-#
-# @author : Emmanouil Sylligardos
-# @when : Winter Semester 2022/2023
-# @where : LIPADE internship Paris
-# @title : MSAD (Model Selection Anomaly Detection)
-# @component: utils
-# @file : config
-#
-########################################################################
+
 
 from models.model.convnet import ConvNet
 from models.model.inception_time import InceptionModel
@@ -26,17 +17,17 @@ path_save_results = 'results/raw_predictions'	# when evaluating a model, the pre
 
 # Detector
 detector_names = [
-	'AE', 
-	'CNN', 
-	'HBOS', 
-	'IFOREST', 
-	'IFOREST1', 
-	'LOF', 
-	'LSTM', 
-	'MP', 
-	'NORMA', 
-	'OCSVM', 
-	'PCA', 
+	'AE',
+	'CNN',
+	'HBOS',
+	'IFOREST',
+	'IFOREST1',
+	'LOF',
+	'LSTM',
+	'MP',
+	'NORMA',
+	'OCSVM',
+	'PCA',
 	'POLY'
 ]
 

@@ -1,13 +1,4 @@
-########################################################################
-#
-# @author : Emmanouil Sylligardos
-# @when : Winter Semester 2022/2023
-# @where : LIPADE internship Paris
-# @title : MSAD (Model Selection Anomaly Detection)
-# @component: root
-# @file : eval_deep_model
-#
-########################################################################
+
 
 import argparse
 import re
@@ -24,11 +15,11 @@ from utils.evaluator import Evaluator
 
 
 def eval_deep_model(
-	data_path, 
-	model_name, 
-	model_path=None, 
-	model_parameters_file=None, 
-	path_save=None, 
+	data_path,
+	model_name,
+	model_path=None,
+	model_parameters_file=None,
+	path_save=None,
 	fnames=None,
 	read_from_file=None,
 	model=None
@@ -63,7 +54,7 @@ def eval_deep_model(
 		model = deep_models[model_name](**model_parameters)
 		model.load_state_dict(torch.load(model_path))
 		model.eval()
-		model.to('cuda')	
+		model.to('cuda')
 
 	# Load the splits
 	if read_from_file is not None:
@@ -102,12 +93,12 @@ def eval_deep_model(
 	)
 	results = results.sort_index()
 	results.columns = [f"{classifier_name}_{x}" for x in results.columns.values]
-	
+
 	# Print results
 	print(results)
 	counter = Counter(results[f"{model_name}_{window_size}_class"])
 	print(dict(counter))
-	
+
 	# Save the results
 	if path_save is not None:
 		file_name = os.path.join(path_save, f"{classifier_name}_preds.csv")
@@ -120,7 +111,7 @@ if __name__ == "__main__":
 		description='Evaluate all deep learning architectures on a single or multiple time series \
 			and save the results'
 	)
-	
+
 	parser.add_argument('-d', '--data', type=str, help='path to the time series to predict', required=True)
 	parser.add_argument('-m', '--model', type=str, help='model to run', required=True)
 	parser.add_argument('-mp', '--model_path', type=str, help='path to the trained model', required=True)
@@ -130,9 +121,9 @@ if __name__ == "__main__":
 
 	args = parser.parse_args()
 	eval_deep_model(
-		data_path=args.data, 
-		model_name=args.model, 
-		model_path=args.model_path, 
+		data_path=args.data,
+		model_name=args.model,
+		model_path=args.model_path,
 		model_parameters_file=args.params,
 		path_save=args.path_save,
 		read_from_file=args.file

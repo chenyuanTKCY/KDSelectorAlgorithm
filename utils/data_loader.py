@@ -1,13 +1,4 @@
-########################################################################
-#
-# @author : Emmanouil Sylligardos
-# @when : Winter Semester 2022/2023
-# @where : LIPADE internship Paris
-# @title : MSAD (Model Selection Anomaly Detection)
-# @component: utils
-# @file : data_loader
-#
-########################################################################
+
 
 import os, glob
 
@@ -28,7 +19,7 @@ class DataLoader:
 
 
 	def get_dataset_names(self):
-		'''Returns the names of existing datasets. 
+		'''Returns the names of existing datasets.
 		Careful, this function will not return any files in the given
 		directory but only the names of the sub-directories
 		as they are the datasets (not the timeseries).
@@ -38,7 +29,7 @@ class DataLoader:
 		names = os.listdir(self.data_path)
 
 		return [x for x in names if os.path.isdir(os.path.join(self.data_path, x))]
-		
+
 
 	def load(self, dataset):
 		'''
@@ -62,7 +53,7 @@ class DataLoader:
 			pbar.set_description('Loading ' + name)
 			for fname in glob.glob(os.path.join(self.data_path, name, '*.out')):
 				curr_data = pd.read_csv(fname, header=None).to_numpy()
-				
+
 				if curr_data.ndim != 2:
 					raise ValueError('did not expect this shape of data: \'{}\', {}'.format(fname, curr_data.shape))
 
@@ -71,9 +62,9 @@ class DataLoader:
 					x.append(curr_data[:, 0])
 					y.append(curr_data[:, 1])
 					# Remove path from file name, keep dataset, time series name
-					fname = '/'.join(fname.split('/')[-2:])		
+					fname = '/'.join(fname.split('/')[-2:])
 					fnames.append(fname.replace(self.data_path, ''))
-					
+
 		return x, y, fnames
 
 
@@ -92,14 +83,14 @@ class DataLoader:
 
 		for name in pbar:
 			pbar.set_description(f'Loading {name}')
-			
+
 			for fname in glob.glob(os.path.join(self.data_path, name, '*.csv')):
 				curr_df = pd.read_csv(fname, index_col=0)
 				curr_index = [os.path.join(name, x) for x in list(curr_df.index)]
 				curr_df.index = curr_index
 
 				df_list.append(curr_df)
-				
+
 		df = pd.concat(df_list)
 
 		return df
@@ -120,7 +111,7 @@ class DataLoader:
 
 		for fname in tqdm(timeseries, desc='Loading timeseries'):
 			curr_data = pd.read_csv(os.path.join(self.data_path, fname), header=None).to_numpy()
-			
+
 			if curr_data.ndim != 2:
 				raise ValueError('did not expect this shape of data: \'{}\', {}'.format(fname, curr_data.shape))
 
