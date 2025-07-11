@@ -3,11 +3,11 @@
 </p>
 
 
-<h1 align="center">KDSelector
+<h1 align="center">KDSelectorAlgorithm
 </h1>
-<h2 align="center"> A Knowledge-Enhanced and Data-Efficient Model Selector Learning Framework for Time Series Anomaly Detection</h2>
+<h2 align="center"> A Framework of Knowledge-Enhanced and Data-Efficient Selector Learning for Anomaly Detection Model Selection in Time Series</h2>
 
-KDSelector proposes a novel knowledge-enhanced and data-efficient framework for learning a neural network (NN)-based model selector in the context of time series anomaly detection (TSAD). It aims to address the limitations of existing model selection methods, which often fail to fully utilize the knowledge in historical data and are inefficient in terms of training speed.
+We proposes a novel knowledge-enhanced and data-efficient framework for learning a neural network (NN)-based model selector in the context of time series anomaly detection (TSAD). It aims to address the limitations of existing model selection methods, which often fail to fully utilize the knowledge in historical data and are inefficient in terms of training speed.
 
 
 
