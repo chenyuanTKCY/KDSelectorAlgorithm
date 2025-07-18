@@ -41,24 +41,50 @@ class ModelExecutioner:
 		runs_dir='runs',
 		weights_dir='weights',
 		lambda_CL=0.5,
-		temperature=0.5
+		temperature=0.5,
+		LLM_mode='eval'
 		# T=0.1
 	):
 		self.model = model
+		self.LLM_mode = LLM_mode
 		self.output_dim = output_dim
+		self.device = device
+		# choose the mode of bert_model
+		if self.LLM_mode == 'eval':
+			self.bert_model = BertModel.from_pretrained('bert-base-uncased').to(device).eval()
+		else:
+			self.bert_model = BertModel.from_pretrained('bert-base-uncased').to(device).train()
+		self.mlp_ts = mlp.MLP(input_dim=128, output_dim=self.output_dim).to(self.device)
+		self.mlp_text = TextMLP(768, output_dim).to(self.device)
 		self.batch_size = batch_size
 		self.runs_dir = runs_dir
 		self.weights_dir = weights_dir
 		self.model_name = model_name
-		self.device = device
 		self.criterion = criterion.to(self.device)
 		self.use_scheduler = use_scheduler
-		self.optimizer = torch.optim.Adam(
-			self.model.parameters(),
-			lr=learning_rate,
-			betas=(0.9, 0.98),
-			eps=1e-9
-		)
+		if self.LLM_mode == 'eval':
+			self.optimizer = torch.optim.Adam(
+				[
+					{'params': self.model.parameters()},
+					{'params': self.mlp_ts.parameters()},
+					{'params': self.mlp_text.parameters()}
+				],
+				lr=learning_rate,
+				betas=(0.9, 0.98),
+				eps=1e-9
+			)
+		else:
+			self.optimizer = torch.optim.Adam(
+				[
+					{'params': self.model.parameters()},
+					{'params': self.bert_model.parameters()},
+					{'params': self.mlp_ts.parameters()},
+					{'params': self.mlp_text.parameters()}
+				],
+				lr=learning_rate,
+				betas=(0.9, 0.98),
+				eps=1e-9
+			)
 		self.n_warmup_steps = n_warmup_steps
 		self.d_model = d_model
 		self.training_time_epoch = 0
@@ -93,13 +119,16 @@ class ModelExecutioner:
 			disable=not self.verbose
 		)
 
-		mlp_ts = mlp.MLP(input_dim=128, output_dim=self.output_dim).to(self.device)
+		mlp_ts = self.mlp_ts.to(self.device)
+		mlp_text = self.mlp_text.to(self.device)
 		for i, (inputs, labels, soft_labels, texts) in loop:
+			for param in self.bert_model.parameters():
+				param.requires_grad = True
 			inputs = inputs.to(self.device, dtype=torch.float32)
 			labels = labels.to(self.device, dtype=torch.float32)
 			soft_labels = soft_labels.to(self.device, dtype=torch.float32)
 
-			text_features = process_text(texts, self.device, output_dim=self.output_dim)
+			text_features = process_text(texts, self.device, output_dim=self.output_dim, bert_model=self.bert_model, mlp_text=mlp_text, LLM_mode=self.LLM_mode)
 
 
 			inputs_ts = inputs.squeeze(1).to(self.device, dtype=torch.float32)

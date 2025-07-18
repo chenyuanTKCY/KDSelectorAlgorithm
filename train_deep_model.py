@@ -63,7 +63,8 @@ def train_deep_model(
 	alpha=None,
 	eval_model=False,
 	lambda_CL=0.5,
-	temperature=1
+	temperature=1,
+	LLM_mode='eval'
 ):
 
 	# Set up
@@ -131,7 +132,8 @@ def train_deep_model(
 		learning_rate=0.00001,
 		lambda_CL=args.lambda_CL,
 		alpha=args.alpha,
-		temperature=args.temperature
+		temperature=args.temperature,
+		LLM_mdoe=args.LLM_mode
 	)
 
 	SAVE_MERGED = f"results/merged/{args.model}_{args.output_dim}_{args.alpha}_{args.lambda_CL}_{args.temperature}_InfoFebruary_128"
@@ -201,6 +203,7 @@ if __name__ == "__main__":
 	parser.add_argument('-l', '--lambda_CL', type=float, default=1.0, help='Weight for the contrastive loss component.')
 	parser.add_argument('-t', '--temperature', type=float, default=1.0, help='Temperature parameter for softmax scaling.')
 	parser.add_argument('-al','--alpha', type=float, default=0.5, help='alpha parameter for the loss function')
+	parser.add_argument('-lm', '--LLM_mode',type=str, choices=['train', 'eval'], default='eval', help='Choose between training (train) or evaluation (eval) mode (default: eval)')
 
 	args = parser.parse_args()
 	train_deep_model(
@@ -215,6 +218,7 @@ if __name__ == "__main__":
 		eval_model=args.eval_true,
 		alpha=args.alpha,
 		lambda_CL=args.lambda_CL,
-		temperature=args.temperature
+		temperature=args.temperature,
+		LLM_mode=args.LLM_mode
 	)
 

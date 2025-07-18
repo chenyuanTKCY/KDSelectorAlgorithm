@@ -2,14 +2,7 @@ import torch
 from transformers import BertTokenizer, BertModel
 import torch.nn as nn
 
-
-model_path = "models/configuration/bert_base_uncased"
-
-
-tokenizer = BertTokenizer.from_pretrained(model_path)
-bert_model = BertModel.from_pretrained(model_path)
-bert_model.eval()
-
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 class TextMLP(nn.Module):
     def __init__(self, input_dim, output_dim):
@@ -27,27 +20,24 @@ class TextMLP(nn.Module):
 # text_mlp = TextMLP(768)
 
 
-def process_text(texts, device, output_dim):
+def process_text(texts, device, output_dim, bert_model, mlp_text, LLM_mode):
     # print("Original texts:", texts)
 
     encoded_inputs = tokenizer(texts, padding=True, truncation=True, return_tensors="pt", max_length=512)
     encoded_inputs = {key: val.to(device) for key, val in encoded_inputs.items()}
-    # print("Encoded inputs:", encoded_inputs)
 
-    bert_model.to(device)
-    with torch.no_grad():
+    if LLM_mode == 'eval':
+        with torch.no_grad():
+            bert_model.to(device)
+            outputs = bert_model(**encoded_inputs)
+    else:
+        bert_model.to(device)
         outputs = bert_model(**encoded_inputs)
 
-
-    # print("BERT output shape:", outputs.last_hidden_state.shape)
-
-
-    text_mlp = TextMLP(768, output_dim)
-    text_mlp.to(device)
+    mlp_text.to(device)
     text_features = outputs.last_hidden_state[:, 0, :]
-    text_features = text_mlp(text_features)
+    text_features = mlp_text(text_features)
 
-    # print("Processed text features shape:", text_features.shape)
 
     return text_features
 

@@ -41,7 +41,10 @@ For the complete list of dependencies, please refer to the `environment.yml` and
 
 **Step 1:** Clone this repository using `git` and change into its root directory.
 
-
+```bash
+git clone https://anonymous.4open.science/r/KDSelectorAlgorithm-10E7.git
+cd KDSelectorAlgorithm/
+```
 
 **Step 2:** Create and activate a `conda` environment named `KDSelector`.
 
