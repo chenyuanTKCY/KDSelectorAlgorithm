@@ -12,8 +12,8 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 from torch.utils.tensorboard import SummaryWriter
-from text_process import process_text
-
+from text_process import process_text, TextMLP
+from transformers import BertTokenizer, BertModel
 
 import numpy as np
 from tqdm import tqdm
@@ -96,14 +96,11 @@ class ModelExecutioner:
 		# self.T = T
 
 	# def train_one_epoch(self, epoch_index, tb_writer, training_loader):
-	def train_one_epoch(self, epoch_index, tb_writer, train_data):
+	def train_one_epoch(self, epoch_index, tb_writer, train_data, train_loader):
 
 		tic = perf_counter()
-		assert isinstance(train_data, InfoBatch), "train_data should be an instance of InfoBatch"
-
-
-
-		train_loader = torch.utils.data.DataLoader(train_data, batch_size=self.batch_size, sampler=train_data.sampler)
+		# assert isinstance(train_data, InfoBatch), "train_data should be an instance of InfoBatch"
+		# train_loader = torch.utils.data.DataLoader(train_data, batch_size=self.batch_size, sampler=train_data.sampler)
 		toc = perf_counter()
 		single_prune_time = toc - tic
 		print(f"--------------+++++++++++++{single_prune_time}+++++++++++++++++++--------------------")
@@ -249,7 +246,7 @@ class ModelExecutioner:
 	# def train(self, n_epochs, training_loader, validation_loader, verbose=True):
 	def train(self, n_epochs, train_data, validation_loader, verbose=True):
 
-		# train_loader = torch.utils.data.DataLoader(train_data, batch_size=self.batch_size, sampler=train_data.sampler)
+		train_loader = torch.utils.data.DataLoader(train_data, batch_size=self.batch_size, sampler=train_data.sampler)
 		timestamp = datetime.now().strftime('%d%m%Y_%H%M%S')
 		writer = SummaryWriter(self.runs_dir + '/{}_{}'.format(self.model_name, timestamp))
 		self.n_epochs = n_epochs
@@ -284,7 +281,7 @@ class ModelExecutioner:
 			# Make sure gradient tracking is on and do a pass
 			self.model.train(True)
 			# avg_loss, avg_acc = self.train_one_epoch(epoch, writer, training_loader)
-			avg_loss, avg_acc, single_prune_time = self.train_one_epoch(epoch, writer, train_data)
+			avg_loss, avg_acc, single_prune_time = self.train_one_epoch(epoch, writer, train_data, train_loader)
 			prune_time += single_prune_time
 			# We don't need gradients on to do reporting
 			self.model.train(False)

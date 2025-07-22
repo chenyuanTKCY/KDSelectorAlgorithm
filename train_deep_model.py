@@ -60,6 +60,9 @@ def train_deep_model(
 	batch_size,
 	model_parameters_file,
 	epochs,
+	nbits,
+    nbins,
+	prune_ratio,
 	alpha=None,
 	eval_model=False,
 	lambda_CL=0.5,
@@ -92,20 +95,18 @@ def train_deep_model(
 	# print("Starting hash bucket generation for training data...")
 	from time import perf_counter
 	tic = perf_counter()
-	training_data.hash_codes = initialize_hash_buckets(training_data, nbits=15)
+	training_data.hash_codes = initialize_hash_buckets(training_data, nbits)
 	toc = perf_counter()
 	prune_time_all = toc - tic
 	print(f"------------------------------+++++++++++++++++++{prune_time_all}+++++++++++++++++++++++++++++==----------------------")
 	# print("Hash bucket generation for training data completed.")
 
-	train_data = InfoBatch(training_data, epochs, 0.8, 0.875, 15, 8, hash_codes=training_data.hash_codes)
+	train_data = InfoBatch(training_data, epochs, prune_ratio, 0.875, nbits=nbits, nbins=nbins, hash_codes=training_data.hash_codes)
 	val_data = TimeseriesDataset(data_path, fnames=val_set)
 	test_data = TimeseriesDataset(data_path, fnames=test_set)
 
 	# Create the data loaders
 	# training_loader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
-
-	# training_loader = DataLoader(train_data, batch_size=batch_size, sampler=train_data.sampler)
 
 	validation_loader = DataLoader(val_data, batch_size=batch_size, shuffle=True)
 
@@ -133,7 +134,7 @@ def train_deep_model(
 		lambda_CL=args.lambda_CL,
 		alpha=args.alpha,
 		temperature=args.temperature,
-		LLM_mdoe=args.LLM_mode
+		LLM_mode=args.LLM_mode
 	)
 
 	SAVE_MERGED = f"results/merged/{args.model}_{args.output_dim}_{args.alpha}_{args.lambda_CL}_{args.temperature}_InfoFebruary_128"
@@ -204,6 +205,9 @@ if __name__ == "__main__":
 	parser.add_argument('-t', '--temperature', type=float, default=1.0, help='Temperature parameter for softmax scaling.')
 	parser.add_argument('-al','--alpha', type=float, default=0.5, help='alpha parameter for the loss function')
 	parser.add_argument('-lm', '--LLM_mode',type=str, choices=['train', 'eval'], default='eval', help='Choose between training (train) or evaluation (eval) mode (default: eval)')
+	parser.add_argument('--nbits', type=int, default=16, help='Number of bits for LSH hashing')
+	parser.add_argument('--nbins', type=int, default=8, help='Number of bins for high-score sample segmentation')
+	parser.add_argument('--prune', type=float, default=0.8, help='Prune ratio for InfoBatch')
 
 	args = parser.parse_args()
 	train_deep_model(
@@ -219,6 +223,9 @@ if __name__ == "__main__":
 		alpha=args.alpha,
 		lambda_CL=args.lambda_CL,
 		temperature=args.temperature,
-		LLM_mode=args.LLM_mode
+		LLM_mode=args.LLM_mode,
+		nbits=args.nbits,
+		nbins=args.nbins,
+		prune_ratio=args.prune
 	)
 

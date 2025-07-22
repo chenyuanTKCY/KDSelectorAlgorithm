@@ -71,7 +71,7 @@ class InfoBatch(Dataset):
     """
 
     def __init__(self, dataset: Dataset, num_epochs: int,
-                 prune_ratio: float = 0.5, delta: float = 0.875, nbits: int = 12, alpha: int = 8, hash_codes=None):
+                 prune_ratio: float = 0.5, delta: float = 0.875, nbits: int = 12, nbins: int = 8, hash_codes=None):
         self.dataset = dataset
         #保留比例
         self.keep_ratio = min(1.0, max(1e-1, 1.0 - prune_ratio))
@@ -95,7 +95,7 @@ class InfoBatch(Dataset):
         self.d = dataset[0][0].shape[0]  # 获取样本维度
         # self.index_lsh = faiss.IndexLSH(self.d, nbits)
         # self.index_lsh = faiss.IndexLSH(8, 64)
-        self.alpha = alpha  # 分段数
+        self.nbins = nbins  # 分段数
 
         self.num_pruned_samples = 0
         self.cur_batch_index = None
@@ -170,15 +170,14 @@ class InfoBatch(Dataset):
         pruned_indices = selected_indices_well.tolist()
         # print("number of pruned_indices_1 is", len(pruned_indices))
 
-        # 打印低分样本与高分样本数量
         # print(f"Low-score samples to prune: {len(well_learned_indices)}, High-score samples: {len(high_score_indices)}")
 
         # Step 1: 高分样本排序
         sorted_high_score_indices = high_score_indices[np.argsort(-self.scores[high_score_indices])]
 
         # Step 2: 等深分段
-        alpha = 8  # 分段数量
-        segments = np.array_split(sorted_high_score_indices, alpha)
+        nbins = self.nbins  # 分段数量
+        segments = np.array_split(sorted_high_score_indices, nbins)
 
         # Step 3: 使用哈希分桶
         buckets = []  # 用于存储每个段的桶
@@ -186,7 +185,7 @@ class InfoBatch(Dataset):
         for i, segment in enumerate(segments):
             if len(segment) == 0:
                 continue
-            # print(f"Segment {i + 1}/{self.alpha} with {len(segment)} samples.")
+            # print(f"Segment {i + 1}/{self.nbins} with {len(segment)} samples.")
             buckets_for_segment = {}
             for idx in segment:
                 # 使用哈希值作为桶ID
@@ -197,27 +196,6 @@ class InfoBatch(Dataset):
             # print(f"  Created {len(buckets_for_segment)} buckets in Segment {i + 1}")
             buckets.append(buckets_for_segment)
             # print("Step 3 Completed - Total Buckets Generated:", len(buckets))
-
-            # Step 3.1：为每个段增加扰动项以生成多维输入
-            # segment_scores = self.scores[segment].cpu().numpy().reshape(-1, 1).astype('float32')
-            # noise = np.random.normal(0, 1, (len(segment), 4)).astype('float32')  # 添加4维随机扰动
-            # segment_scores_with_noise = np.hstack((segment_scores, noise))  # 将扰动项合并到segment_scores
-            # 创建IndexLSH并添加多维特征
-            # index_lsh = faiss.IndexLSH(segment_scores_with_noise.shape[1], nbits)
-            # index_lsh.train(segment_scores_with_noise)  # 确保LSH索引训练完成
-            # 编码样本得到哈希值
-            # hash_codes = np.zeros((len(segment), (nbits + 7) // 8), dtype=np.uint8)
-            # index_lsh.sa_encode(segment_scores_with_noise, hash_codes)
-
-            # Step 3.4：将哈希值转换为桶ID并分桶
-            # buckets_for_segment = {}
-            # for j, hash_code in enumerate(hash_codes):
-                # bucket_id = hash_code.tobytes()  # 使用哈希字节表示作为桶ID
-                # if bucket_id not in buckets_for_segment:
-                    # buckets_for_segment[bucket_id] = []
-                # buckets_for_segment[bucket_id].append(segment[j])
-
-            # buckets.append(buckets_for_segment)
 
         # Step 4: 桶内逐桶剪枝
         # print("Starting Step 4 - Pruning within each bucket")
@@ -255,188 +233,6 @@ class InfoBatch(Dataset):
         np.random.shuffle(pruned_indices)
 
         return pruned_indices
-
-    '''
-
-        def prune(self):
-        well_learned_mask = (self.scores < self.scores.mean()).numpy()
-        well_learned_indices = np.where(well_learned_mask)[0]
-        remained_indices = np.where(~well_learned_mask)[0].tolist()
-        high_score_indices = np.where(~well_learned_mask)[0]
-
-        # Step 1: 高分样本排序
-        sorted_high_score_indices = high_score_indices[np.argsort(-self.scores[high_score_indices])]
-        # print("Step 1 - Sorted high-score indices:", sorted_high_score_indices)
-
-        # Step 2: 等深分段
-        alpha = 8  # 选择的分段数量
-        segments = np.array_split(sorted_high_score_indices, alpha)
-        # print("Step 2 - Segments:", segments)
-
-        # Step 3: 使用哈希分桶
-        # print("Starting Step 3 - Hash Bucketing")
-        buckets = []  # 用于存储每个段的桶
-        nbits = 64  # 哈希位数
-
-        for i, segment in enumerate(segments):
-            if len(segment) == 0:
-                continue
-
-            # Step 3.1：创建哈希输入向量
-            # print(f"Creating hash input for segment {i}")
-            # 这里将 `self.scores[segment]` 转换为 `numpy` 数组以使用 `astype`
-            print(f"\nSegment {i}: Number of Samples = {len(segment)}")
-            segment_scores = self.scores[segment].cpu().numpy().reshape(-1, 1).astype('float32')
-            print(f"  Hash Input Vector - dtype: {segment_scores.dtype}, shape: {segment_scores.shape}")
-            # print(f"segment_scores dtype: {segment_scores.dtype}, shape: {segment_scores.shape}")
-
-            # 创建一个新的IndexLSH来进行哈希分桶
-            # print("Creating IndexLSH")
-            # index_lsh = faiss.IndexLSH(d=1, nbits=nbits)
-            index_lsh = faiss.IndexLSH(1, nbits)
-            # print("IndexLSH created successfully")
-
-            # Step 3.2：为当前段构建哈希分桶
-            index_lsh.add(segment_scores)
-            print("  Created IndexLSH and added segment scores.")
-            # print("Added segment scores to IndexLSH")
-
-            # Step 3.3：搜索桶ID
-            # _, bucket_ids = index_lsh.search(segment_scores, k=1)
-            # print(f"  Assigned Hash Buckets - bucket_ids shape: {bucket_ids.shape}")
-            bucket_ids = index_lsh.assign(segment_scores)
-            print(
-                f"Assigned Hash Buckets - bucket_ids shape: {bucket_ids.shape}, unique buckets: {np.unique(bucket_ids)}")
-            # print("Search in IndexLSH completed")
-
-            # Step 3.4：按照哈希值将相似样本归入同一个桶
-            buckets_for_segment = {}
-            for j, bucket_id in enumerate(bucket_ids.ravel()):
-                if bucket_id not in buckets_for_segment:
-                    buckets_for_segment[bucket_id] = []
-                buckets_for_segment[bucket_id].append(segment[j])
-
-            # 将当前段的桶结果加入全局桶中
-            buckets.append(buckets_for_segment)
-        print("Step 3 Completed - Total Buckets Generated:", len(buckets))
-        # print(f"Step 3 - Segment {i} Buckets:", buckets_for_segment)
-
-
-        # Step 4: 桶内逐桶剪枝
-        print("Starting Step 4 - Pruning within each bucket")
-        pruned_indices = list(remained_indices)  # 初始化剩余的样本索引
-
-        for group_idx, bucket_group in enumerate(buckets):
-            print(f"Processing Bucket Group {group_idx + 1}/{len(buckets)}")
-            for bucket_id, indices in bucket_group.items():
-                print(f"  Bucket {bucket_id}: Sample Count = {len(indices)}")
-
-                # 如果桶内有多个样本，保留最高分的样本
-                if len(indices) > 1:
-                    highest_score_index = indices[np.argmax(self.scores[indices])]
-                    pruned_indices.append(highest_score_index)
-                    print(f"    Retained Highest Score Sample Index: {highest_score_index}")
-
-                    # 剩余样本进行按比例剪枝
-                    num_to_keep = max(1, int(self.keep_ratio * (len(indices) - 1)))
-                    selected_indices = np.random.choice(
-                        [idx for idx in indices if idx != highest_score_index],
-                        num_to_keep,
-                        replace=False
-                    )
-                    pruned_indices.extend(selected_indices)
-                    print(f"    Randomly Selected {num_to_keep} Samples for Retention: {selected_indices}")
-
-                    # 按比例调整被选中样本的权重
-                    self.weights[selected_indices] = 1 / self.keep_ratio
-                else:
-                    # 桶内只有一个样本，直接保留
-                    pruned_indices.extend(indices)
-                    print(f"    Single Sample in Bucket, Retained without Pruning: {indices[0]}")
-
-        # 更新剪枝样本数
-        self.num_pruned_samples += len(self.dataset) - len(pruned_indices)
-        np.random.shuffle(pruned_indices)
-
-        return pruned_indices
-
-        # 原始的随机选择逻辑，用于后续步骤的对比测试
-        # selected_indices = np.random.choice(
-            # well_learned_indices, int(self.keep_ratio * len(well_learned_indices)), replace=False
-        # )
-        # self.reset_weights()
-        # if len(selected_indices) > 0:
-            # self.weights[selected_indices] = 1 / self.keep_ratio
-            # remained_indices.extend(selected_indices)
-
-        # self.num_pruned_samples += len(self.dataset) - len(remained_indices)
-        # np.random.shuffle(remained_indices)
-
-        # return remained_indices
-
-    '''
-
-
-    '''
-        def prune(self):
-        mean_score = self.scores.mean().item()
-        high_score_indices = np.where(self.scores > mean_score)[0]
-
-        print(f"平均分数: {mean_score}")
-        print(f"高于均值的样本索引: {high_score_indices}")
-
-        # Step 1: 根据评分进行排序，按分数从大到小排列
-        sorted_high_scores = high_score_indices[np.argsort(-self.scores[high_score_indices].numpy())]
-
-        # Step 2: 分段，使用 alpha 指定的段数
-        segment_size = len(sorted_high_scores) // self.alpha
-        segments = [sorted_high_scores[i * segment_size:(i + 1) * segment_size] for i in range(self.alpha)]
-
-        retained_indices = set()
-
-        # Step 3: 针对每个段使用 LSH 分桶
-        for segment in segments:
-            if len(segment) == 0:
-                continue  # 跳过空段
-            data_to_encode = np.array([self.dataset[i][0].numpy() for i in segment])
-
-            # 检查 data_to_encode 的形状并确保符合 LSH 需求
-            print(f"data_to_encode shape before adjustment: {data_to_encode.shape}")
-
-            if data_to_encode.shape[1] != self.d:
-                print(f"Dimension mismatch: Expected feature dimension {self.d}, but got {data_to_encode.shape[1]}")
-                continue  # 跳过维度不匹配的段
-
-            print(f"data_to_encode shape after adjustment: {data_to_encode.shape}")
-            self.index_lsh.reset()  # 重置哈希表
-            self.index_lsh.add(data_to_encode)  # 重新添加数据
-
-            _, labels = self.index_lsh.search(data_to_encode, k=len(segment))  # 获取每个样本的哈希桶
-            buckets = {}
-
-            for i, label_list in enumerate(labels):
-                bucket_id = label_list[0]  # 假设第一个桶ID表示分配的哈希桶
-                if bucket_id not in buckets:
-                    buckets[bucket_id] = []
-                buckets[bucket_id].append(segment[i])
-
-            # Step 4: 剪枝策略：保留每个桶中评分最高的样本，其他样本按照 prune_ratio 剪枝
-            for bucket_id, bucket_samples in buckets.items():
-                if len(bucket_samples) > 1:
-                    sorted_samples = sorted(bucket_samples, key=lambda idx: -self.scores[idx].item())
-                    retained_indices.add(sorted_samples[0])  # 保留最高分样本
-                    pruned_samples = np.random.choice(sorted_samples[1:],
-                                                      int(len(sorted_samples[1:]) * self.keep_ratio), replace=False)
-                    retained_indices.update(pruned_samples)
-                else:
-                    retained_indices.update(bucket_samples)  # 样本少于等于1则不剪枝
-
-        retained_indices = np.array(list(retained_indices))
-        self.reset_weights()
-        self.weights[retained_indices] *= 1 / self.keep_ratio
-        return retained_indices
-    '''
-
 
 
 
