@@ -119,7 +119,9 @@ python3 run_avg_ens.py --n_jobs=16
 
 #### Data Preprocessing
 
-Our models have been implemented to work with fixed-size inputs. Thus, before running any models, we first divide every time series in the TSB benchmark into windows. Note that you can add your own time series here and divide them into windows, but make sure to follow the same format.
+Our models have been implemented to work with fixed-size inputs. Thus, before running any models, we first divide every time series in the TSB benchmark into windows. 
+
+Note that you can add your own time series here and divide them into windows, but make sure to follow the same format.All the commands provided in this repository use a subsequence length of 128 as an example. However, you can modify this to suit your specific needs by selecting window sizes between 64, 128, 256, 512, 1024, and 2048.
 
 To produce a windowed dataset, run the following command:
 
