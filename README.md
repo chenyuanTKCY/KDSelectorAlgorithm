@@ -13,7 +13,7 @@ We proposes a novel knowledge-enhanced and data-efficient framework for learning
 
 ## Framework
 
-We introduce a novel neural network (NN)-based selector learning framework, which serves as the core component of our system. For a comprehensive understanding of its architecture and implementation, please also refer to some extra analysis available at [Appendix](https://github.com/chenyuanTKCY/KDSelectorAlgorithm/blob/master/appendix/Appendix_of_KDSelector.pdf)
+We introduce a novel neural network (NN)-based selector learning framework, which serves as the core component of our system. For a comprehensive understanding of its architecture and implementation, please also refer to some extra analysis available at [Appendix](https://github.com/chenyuanTKCY/KDSelectorAlgorithm/blob/master/appendix/Appendix_of_KDSelector.pdf).
 And you can also refer to our demonstration repository available at [demo](https://github.com/chenyuanTKCY/KDSelector), which has been accepted by [SIGMOD2025](https://sigmod.org/)
 <!--
 <iframe src="https://pdf-embed-api.com/?url=https://github.com/chenyuanTKCY/KDSelector/blob/master/app/fig/framework.pdf" width="100%" height="600px"></iframe> -->
