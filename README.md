@@ -203,3 +203,20 @@ python3 eval_deep_model.py --data=data/TSB_128/ --model=resnet --model_path=resu
 ```
 
 - file: Path to a file that contains a specific split (to reproduce our results).
+  
+## Citation
+
+If you find this work useful, please cite our paper:
+
+```bibtex
+@article{liang2026kdselector,
+  title={KDSelector: A Framework of Knowledge-Enhanced and Data-Efficient Selector Learning for Anomaly Detection Model Selection in Time Series},
+  author={Liang, Zhiyu and Cai, Dongrui and Zhang, Chenyuan and Liang, Zheng and Liang, Chen and Qiu, Shi and Wang, Jin and Wang, Hongzhi},
+  journal={Proceedings of the VLDB Endowment},
+  volume={19},
+  number={9},
+  pages={1935--1948},
+  year={2026}
+}
+```
+
